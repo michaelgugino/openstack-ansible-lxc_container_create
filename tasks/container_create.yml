@@ -53,6 +53,10 @@
   tags:
     - lxc-container-autodev
 
+- name: Obtain the system's ssh public key
+  set_fact:
+    lxc_container_ssh_key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
 - name: Create container
   lxc_container:
     name: "{{ inventory_hostname }}"
@@ -75,6 +79,10 @@
       ln -s /dev/null /etc/systemd/system/systemd-udevd-kernel.socket || true
       ln -s /dev/null /etc/systemd/system/proc-sys-fs-binfmt_misc.automount || true
       echo -e '{{ lxc_container_default_interfaces }}' | tee /etc/network/interfaces
+      mkdir -p /root/.ssh
+      touch /root/.ssh/authorized_keys
+      chmod 644 /root/.ssh/authorized_keys
+      echo '{{ lxc_container_ssh_key }}' >> /root/.ssh/authorized_keys
     container_config:
       - "lxc.autodev=1"
       - "lxc.pts=1024"
